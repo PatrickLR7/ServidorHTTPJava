@@ -11,6 +11,10 @@ import java.net.Socket;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.StringTokenizer;
+import java.util.Date;
+import java.util.List;
+import java.sql.Timestamp;
+import java.util.ArrayList;
 
 // Cada connecion de Cliente sera manejada en un hilo dedicado.
 public class ServidorHTTP implements  Runnable {
@@ -18,6 +22,9 @@ public class ServidorHTTP implements  Runnable {
     static final String ARCHIVO_DEFECTO = "index.html";
     static final String NO_ENCONTRADO = "404.html";
     static final String METODO_NO_ENCONTRADO = "no_soportado.html";
+
+    String datosBitacora = ""; // String que contiene todos los datos de la bitacora.
+    File archivoBitacora = new File("bitacoraServidorHTTP.txt"); // Archivo en el que se escribe la bitacora.
 
     // Puerto para levantar servidor.
     static final int PUERTO = 8080;
@@ -27,6 +34,11 @@ public class ServidorHTTP implements  Runnable {
 
     public ServidorHTTP(Socket c) {
         conectar = c;
+        // Se asignan los encabezados de las columnas para la bitacora.
+        datosBitacora += "_____________________________________________________________________________________________________________________" + "\n";
+        datosBitacora += String.format("%10s %15s %20s %40s %15s %10s", "Metodo", "Estampilla", "Servidor", "Refiere", "Url", "Datos") + "\n";
+        // datosBitacora += "\n";
+
     }
 
     public static void main(String[] args) {
@@ -105,6 +117,10 @@ public class ServidorHTTP implements  Runnable {
                     if(archivoSolicitado.endsWith("/")) {
                         archivoSolicitado += ARCHIVO_DEFECTO;
                     }
+                    /*
+                        StringTokenizer strtok = new StringTokenizer(archivoSolicitado, "?");
+                        archivoSolicitado = strtok.nextToken();
+                    */
 
                     File archivo = new File(RAIZ_WEB, archivoSolicitado);
                     int longiArchivo = (int) archivo.length();
@@ -143,6 +159,12 @@ public class ServidorHTTP implements  Runnable {
                         // Escribir datos o contenido a archivo que se le muestra al cliente.
                         datosSalida.write(datosArchivo, 0, longiArchivo);
                         datosSalida.flush();
+
+                        // Escribe a bitacora.
+                        escribirBitacora(metodo, ""+mapaEncabezados.get("Host:"), ""+mapaEncabezados.get("Referer:"), archivoSolicitado, "datos");
+                    } else {
+                        // Escribe a bitacora.
+                        escribirBitacora(metodo, ""+mapaEncabezados.get("Host:"), ""+mapaEncabezados.get("Referer:"), archivoSolicitado, "datos");
                     }
                     System.out.println("Archivo " + archivoSolicitado + " del tipo " + tMIMEContenido); // Imprime el archivo solicitado y su tipo.
                 } else if(metodo.equals("POST")) {
@@ -199,6 +221,9 @@ public class ServidorHTTP implements  Runnable {
                         salida.println("Server: Servidor HTTP - TP1");
                         salida.println(""); // Linea en blanco entre encabezados y contenido. Esto es importante!
 
+                        // Escribe a bitacora.
+                        escribirBitacora(metodo, ""+mapaEncabezados.get("Host:"), ""+mapaEncabezados.get("Referer:"), archivoSolicitado, postData);
+
                         // Envía el HTML
                         salida.println("<H1>Bienvenido al Servidor: " + postData + "! </H1>");
                         //salida.println("<H2>Request Method->" + request_method + "</H2>");
@@ -213,7 +238,6 @@ public class ServidorHTTP implements  Runnable {
                 }
 
             }
-
 
         } catch(FileNotFoundException fnfe) {
             try {
@@ -256,13 +280,13 @@ public class ServidorHTTP implements  Runnable {
     public String getTipoContenido(String archSolicitado) {
         if(archSolicitado.endsWith(".htm") || archSolicitado.endsWith(".html")) {
             return "text/html";
-        } else if(archSolicitado.endsWith(".jpg") || archSolicitado.endsWith(".jpeg")){
+        } else if(archSolicitado.endsWith(".jpg") || archSolicitado.endsWith(".jpeg")) {
             return "image/jpg";
-        } else if(archSolicitado.endsWith(".gif")){
+        } else if(archSolicitado.endsWith(".gif")) {
             return "image/gif";
-        } else if(archSolicitado.endsWith(".png")){
+        } else if(archSolicitado.endsWith(".png")) {
             return "image/png";
-        } else if(archSolicitado.endsWith(".mp3")){
+        } else if(archSolicitado.endsWith(".mp3")) {
             return "audio/mpeg";
         } else {
             return "text/plain";
@@ -290,5 +314,43 @@ public class ServidorHTTP implements  Runnable {
         datosSalida.flush();
 
         System.out.println("Archivo: " + archivoSolicitado + " no encontrado.");
+    }
+
+    public void escribirBitacora(String metodo, String servidor, String refiere, String url, String datos) {
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        List<DatosBitacora> bitacora = new ArrayList<DatosBitacora>();
+        String tiempo = Long.toString(timestamp.getTime());
+
+        bitacora.add(new DatosBitacora(metodo, tiempo, servidor, refiere, url, datos));
+
+        // Columnas de la bitacora.
+        System.out.println("_____________________________________________________________________________________________________________________");
+        System.out.printf("%10s %15s %20s %40s %15s %10s", "Metodo", "Estampilla", "Servidor", "Refiere", "Url", "Datos");
+        System.out.println();
+
+        // Datos de la bitacora.
+        System.out.println("_____________________________________________________________________________________________________________________");
+        datosBitacora += "_____________________________________________________________________________________________________________________" + "\n";
+        for(DatosBitacora b: bitacora) {
+            System.out.format("%10s %15s %20s %40s %15s %10s", b.getMetodo(), b.getEstampilla(), b.getServidor(), b.getRefiere(), b.getUrl(), b.getDatos());
+            datosBitacora += String.format("%10s %15s %20s %40s %15s %10s", b.getMetodo(), b.getEstampilla(), b.getServidor(), b.getRefiere(), b.getUrl(), b.getDatos()) + "\n";
+            System.out.println();
+            //datosBitacora += "\n";
+        }
+        System.out.println("===================================================================================================================");
+        datosBitacora += "=====================================================================================================================" + "\n";
+
+        escribirArchivo(datosBitacora);
+    }
+
+    public void escribirArchivo(String info) {
+        try {
+            FileWriter fileWriter = new FileWriter(archivoBitacora, true);
+            fileWriter.write(info);
+            fileWriter.flush();
+            fileWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
