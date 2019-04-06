@@ -9,11 +9,26 @@
     <h1> Mi primer servidor HTTP! </h1>
 </div>
 
-<form name="input" action="form_submited" method="post">
+<h3>Enviar datos utilizando post</h3>
+<form name="input" action="form_submitted" method="post">
     <p>Nombre:</p>
     <input type="text" name="user"/>
     <p><input type="submit" value="Enviar"></p>
 </form>
+<h3>Enviar datos utilizando get</h3>
+<form name="input" action ="/form_submitted_get" method="get">
+    Datos a enviar: <input type = "text" name="datos"><br>
+    <input type="submit" value="Enviar">
+</form>
 
+<h1>&nbsp;</h1>
+<h3> Enlace a imagen/jpg </h3>
+<a href="imagen.jpg">imagen.jpg</a>
+<h3> Enlace a imagen/png </h3>
+<a href="harry.png">harry.png</a>
+<h3> Enlace a imagen/gif </h3>
+<a href="gato.gif">gato.gif</a>
+<h3> Enlace a audio/mp3 </h3>
+<a href="audio.mp3">audio.mp3</a>
 </body>
 </html>

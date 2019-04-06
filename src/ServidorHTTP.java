@@ -35,8 +35,8 @@ public class ServidorHTTP implements  Runnable {
     public ServidorHTTP(Socket c) {
         conectar = c;
         // Se asignan los encabezados de las columnas para la bitacora.
-        datosBitacora += "_____________________________________________________________________________________________________________________" + "\n";
-        datosBitacora += String.format("%10s %15s %20s %40s %15s %10s", "Metodo", "Estampilla", "Servidor", "Refiere", "Url", "Datos") + "\n";
+        datosBitacora += "_________________________________________________________________________________________________________________________________________" + "\n";
+        datosBitacora += String.format("%10s %15s %20s %40s %30s %15s", "Metodo", "Estampilla", "Servidor", "Refiere", "Url", "Datos") + "\n";
         // datosBitacora += "\n";
 
     }
@@ -117,10 +117,16 @@ public class ServidorHTTP implements  Runnable {
                     if(archivoSolicitado.endsWith("/")) {
                         archivoSolicitado += ARCHIVO_DEFECTO;
                     }
-                    /*
+
+                    boolean enviaDatos = false;
+                    String datosGet = "";
+                    if(archivoSolicitado.contains("?")){
                         StringTokenizer strtok = new StringTokenizer(archivoSolicitado, "?");
-                        archivoSolicitado = strtok.nextToken();
-                    */
+                        archivoSolicitado = strtok.nextToken() + ".html";
+                        datosGet = strtok.nextToken();
+                        enviaDatos = true;
+                    }
+
 
                     File archivo = new File(RAIZ_WEB, archivoSolicitado);
                     int longiArchivo = (int) archivo.length();
@@ -155,16 +161,23 @@ public class ServidorHTTP implements  Runnable {
                     salida.flush(); // Se limpia el flujo de caracteres de salida.
 
                     if(metodo.equals("GET")) { // Como es el metodo GET se devuelve el contenido.
-                        byte[] datosArchivo = leerDatosArchivo(archivo, longiArchivo);
-                        // Escribir datos o contenido a archivo que se le muestra al cliente.
-                        datosSalida.write(datosArchivo, 0, longiArchivo);
-                        datosSalida.flush();
+                        if(enviaDatos == false) {
+                            byte[] datosArchivo = leerDatosArchivo(archivo, longiArchivo);
+                            // Escribir datos o contenido a archivo que se le muestra al cliente.
+                            datosSalida.write(datosArchivo, 0, longiArchivo);
+                            datosSalida.flush();
+                        } else{
+                            salida.println("<H1>Datos que se enviaron con metodo GET: " + datosGet + "! </H1>");
+                            salida.flush();
+                        }
+
+
 
                         // Escribe a bitacora.
-                        escribirBitacora(metodo, ""+mapaEncabezados.get("Host:"), ""+mapaEncabezados.get("Referer:"), archivoSolicitado, "datos");
+                        escribirBitacora(metodo, ""+mapaEncabezados.get("Host:"), ""+mapaEncabezados.get("Referer:"), archivoSolicitado, datosGet);
                     } else {
                         // Escribe a bitacora.
-                        escribirBitacora(metodo, ""+mapaEncabezados.get("Host:"), ""+mapaEncabezados.get("Referer:"), archivoSolicitado, "datos");
+                        escribirBitacora(metodo, ""+mapaEncabezados.get("Host:"), ""+mapaEncabezados.get("Referer:"), archivoSolicitado, "");
                     }
                     System.out.println("Archivo " + archivoSolicitado + " del tipo " + tMIMEContenido); // Imprime el archivo solicitado y su tipo.
                 } else if(metodo.equals("POST")) {
@@ -226,6 +239,7 @@ public class ServidorHTTP implements  Runnable {
 
                         // Envía el HTML
                         salida.println("<H1>Bienvenido al Servidor: " + postData + "! </H1>");
+                        salida.println("<H2>Los datos del usuario se obtuvieron mediante el metodo POST </H2>");
                         //salida.println("<H2>Request Method->" + request_method + "</H2>");
                         //salida.println("<H2>Post->" + postData + "</H2>");
                         salida.println("<form name=\"input\" action=\"form_submited\" method=\"post\">");
@@ -324,21 +338,21 @@ public class ServidorHTTP implements  Runnable {
         bitacora.add(new DatosBitacora(metodo, tiempo, servidor, refiere, url, datos));
 
         // Columnas de la bitacora.
-        System.out.println("_____________________________________________________________________________________________________________________");
-        System.out.printf("%10s %15s %20s %40s %15s %10s", "Metodo", "Estampilla", "Servidor", "Refiere", "Url", "Datos");
+        System.out.println("_________________________________________________________________________________________________________________________________________");
+        System.out.printf("%10s %15s %20s %40s %30s %15s", "Metodo", "Estampilla", "Servidor", "Refiere", "Url", "Datos");
         System.out.println();
 
         // Datos de la bitacora.
-        System.out.println("_____________________________________________________________________________________________________________________");
-        datosBitacora += "_____________________________________________________________________________________________________________________" + "\n";
+        System.out.println("_________________________________________________________________________________________________________________________________________");
+        datosBitacora += "_________________________________________________________________________________________________________________________________________" + "\n";
         for(DatosBitacora b: bitacora) {
-            System.out.format("%10s %15s %20s %40s %15s %10s", b.getMetodo(), b.getEstampilla(), b.getServidor(), b.getRefiere(), b.getUrl(), b.getDatos());
-            datosBitacora += String.format("%10s %15s %20s %40s %15s %10s", b.getMetodo(), b.getEstampilla(), b.getServidor(), b.getRefiere(), b.getUrl(), b.getDatos()) + "\n";
+            System.out.format("%10s %15s %20s %40s %30s %15s", b.getMetodo(), b.getEstampilla(), b.getServidor(), b.getRefiere(), b.getUrl(), b.getDatos());
+            datosBitacora += String.format("%10s %15s %20s %40s %30s %15s", b.getMetodo(), b.getEstampilla(), b.getServidor(), b.getRefiere(), b.getUrl(), b.getDatos()) + "\n";
             System.out.println();
             //datosBitacora += "\n";
         }
-        System.out.println("===================================================================================================================");
-        datosBitacora += "=====================================================================================================================" + "\n";
+        System.out.println("=======================================================================================================================================");
+        datosBitacora += "=========================================================================================================================================" + "\n";
 
         escribirArchivo(datosBitacora);
     }
