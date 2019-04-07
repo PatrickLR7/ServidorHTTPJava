@@ -97,12 +97,12 @@ public class ServidorHTTP implements  Runnable {
                 byte[] datosArch = leerDatosArchivo(archivoNE, longiArchivo); // Lee el contenido para retornarselo al cliente.
 
                 // Se mandan Encabezados o Headers HTTP con datos al cliente.
-                salida.println("HTTP/1.1 - 501 No Implementado");
-                salida.println("Servidor (Server): Servidor HTTP - TP1");
-                salida.println("Fecha (Date): " + new Date());
-                salida.println("Tipo de contenido (Content-type): " + tMIMEContenido);
-                salida.println("Longitud de contenido (Content-length): " + longiArchivo);
-                salida.println("Acepta (Accept): text/html, text/plain"); // Tipos de media que acepta el servidor. Faltan imagenes.
+                salida.println("HTTP/1.1 501 No Implementado");
+                salida.println("Server: Servidor HTTP - TP1");
+                salida.println("Date: " + new Date());
+                salida.println("Content-type: " + tMIMEContenido);
+                salida.println("Content-length: " + longiArchivo);
+                salida.println("Accept: text/html, text/plain"); // Tipos de media que acepta el servidor. Faltan imagenes.
                 salida.println(); // Linea en blanco entre encabezados y contenido. Esto es importante!
                 salida.flush(); // Se limpia el flujo de caracteres de salida.
 
@@ -129,57 +129,59 @@ public class ServidorHTTP implements  Runnable {
 
 
                     File archivo = new File(RAIZ_WEB, archivoSolicitado);
-                    int longiArchivo = (int) archivo.length();
-                    String tMIMEContenido = getTipoContenido(archivoSolicitado);
+                    if(archivo.exists()) {
 
-                    String linea = "";
-                    StringBuilder builder = new StringBuilder();
-                    while ((linea = entrada.readLine()) != null && (linea.length() != 0)) {
-                        builder.append(linea);
-                        builder.append("\n");
-                    }
-                    String respuesta = builder.toString(); // Hilera con todos los headers recuperados con el string builder.
-                    String[] lineasEncabezados = respuesta.split("\n"); // Partimos la hilera cada vez que hay un \n. Esto para tener cada header en un campo del arreglo.
-                    HashMap mapaEncabezados = new HashMap<>(); // Para poder sacar solo los headers que queremos.
-                    String[] encabezadoValor = new String[2]; // Vector auxiliar para guardar los headers como llave-valor en el mapa.
-                    for(int i=0; i < lineasEncabezados.length; i++) { // Se recorre vector con los encabezados.
-                        encabezadoValor = lineasEncabezados[i].split(" "); // Separa los encabezados en llave-valor y lo guarda en el arreglo encabezado-valor.
-                        mapaEncabezados.put(encabezadoValor[0], encabezadoValor[1]); // Guarda las posciones del arreglo en el mapa.
-                        encabezadoValor = new String[2]; // Limpiamos el vector auxiliar.
-                    }
+                        int longiArchivo = (int) archivo.length();
+                        String tMIMEContenido = getTipoContenido(archivoSolicitado);
 
-                    // Encabezados HTTP: Accept, Content-type, Content-length, Date, Host, Referer, Server.
-                    salida.println("HTTP/1.1 - 200 OK");
-                    salida.println("Accept: " + mapaEncabezados.get("Accept:"));
-                    salida.println("Content-type: " + tMIMEContenido);
-                    salida.println("Content-length: " + longiArchivo);
-                    salida.println("Date: " + new Date());
-                    salida.println("Host: " + mapaEncabezados.get("Host:"));
-                    salida.println("Referer: " + mapaEncabezados.get("Referer:"));
-                    salida.println("Server: Servidor HTTP - TP1");
-                    salida.println(""); // Linea en blanco entre encabezados y contenido. Esto es importante!
-                    salida.flush(); // Se limpia el flujo de caracteres de salida.
-
-                    if(metodo.equals("GET")) { // Como es el metodo GET se devuelve el contenido.
-                        if(enviaDatos == false) {
-                            byte[] datosArchivo = leerDatosArchivo(archivo, longiArchivo);
-                            // Escribir datos o contenido a archivo que se le muestra al cliente.
-                            datosSalida.write(datosArchivo, 0, longiArchivo);
-                            datosSalida.flush();
-                        } else{
-                            salida.println("<H1>Datos que se enviaron con metodo GET: " + datosGet + "! </H1>");
-                            salida.flush();
+                        String linea = "";
+                        StringBuilder builder = new StringBuilder();
+                        while ((linea = entrada.readLine()) != null && (linea.length() != 0)) {
+                            builder.append(linea);
+                            builder.append("\n");
+                        }
+                        String respuesta = builder.toString(); // Hilera con todos los headers recuperados con el string builder.
+                        String[] lineasEncabezados = respuesta.split("\n"); // Partimos la hilera cada vez que hay un \n. Esto para tener cada header en un campo del arreglo.
+                        HashMap mapaEncabezados = new HashMap<>(); // Para poder sacar solo los headers que queremos.
+                        String[] encabezadoValor = new String[2]; // Vector auxiliar para guardar los headers como llave-valor en el mapa.
+                        for (int i = 0; i < lineasEncabezados.length; i++) { // Se recorre vector con los encabezados.
+                            encabezadoValor = lineasEncabezados[i].split(" "); // Separa los encabezados en llave-valor y lo guarda en el arreglo encabezado-valor.
+                            mapaEncabezados.put(encabezadoValor[0], encabezadoValor[1]); // Guarda las posciones del arreglo en el mapa.
+                            encabezadoValor = new String[2]; // Limpiamos el vector auxiliar.
                         }
 
+                        // Encabezados HTTP: Accept, Content-type, Content-length, Date, Host, Referer, Server.
+                        salida.println("HTTP/1.1 200 OK");
+                        salida.println("Accept: " + mapaEncabezados.get("Accept:"));
+                        salida.println("Content-type: " + tMIMEContenido);
+                        salida.println("Content-length: " + longiArchivo);
+                        salida.println("Date: " + new Date());
+                        salida.println("Host: " + mapaEncabezados.get("Host:"));
+                        salida.println("Referer: " + mapaEncabezados.get("Referer:"));
+                        salida.println("Server: Servidor HTTP - TP1");
+                        salida.println(""); // Linea en blanco entre encabezados y contenido. Esto es importante!
+                        salida.flush(); // Se limpia el flujo de caracteres de salida.
 
-
-                        // Escribe a bitacora.
-                        escribirBitacora(metodo, ""+mapaEncabezados.get("Host:"), ""+mapaEncabezados.get("Referer:"), archivoSolicitado, datosGet);
+                        if (metodo.equals("GET")) { // Como es el metodo GET se devuelve el contenido.
+                            if (enviaDatos == false) {
+                                byte[] datosArchivo = leerDatosArchivo(archivo, longiArchivo);
+                                // Escribir datos o contenido a archivo que se le muestra al cliente.
+                                datosSalida.write(datosArchivo, 0, longiArchivo);
+                                datosSalida.flush();
+                            } else {
+                                salida.println("<H1>Datos que se enviaron con metodo GET: " + datosGet + "! </H1>");
+                                salida.flush();
+                            }
+                            // Escribe a bitacora.
+                            escribirBitacora(metodo, "" + mapaEncabezados.get("Host:"), "" + mapaEncabezados.get("Referer:"), archivoSolicitado, datosGet);
+                        } else {
+                            // Escribe a bitacora.
+                            escribirBitacora(metodo, "" + mapaEncabezados.get("Host:"), "" + mapaEncabezados.get("Referer:"), archivoSolicitado, "");
+                        }
+                        System.out.println("Archivo " + archivoSolicitado + " del tipo " + tMIMEContenido); // Imprime el archivo solicitado y su tipo.
                     } else {
-                        // Escribe a bitacora.
-                        escribirBitacora(metodo, ""+mapaEncabezados.get("Host:"), ""+mapaEncabezados.get("Referer:"), archivoSolicitado, "");
+                        archivoNoEncontrado(salida, datosSalida, archivoSolicitado); // Si no se encuentra el archivo solicitado ejecuta este metodo, que muestra en pantalla la pagina de error 404.
                     }
-                    System.out.println("Archivo " + archivoSolicitado + " del tipo " + tMIMEContenido); // Imprime el archivo solicitado y su tipo.
                 } else if(metodo.equals("POST")) {
                     // Implementar POST.
                     try {
@@ -224,7 +226,7 @@ public class ServidorHTTP implements  Runnable {
                         }
 
                         // Accept, Content-type, Content-length, Date, Host, Referer, Server.
-                        salida.println("HTTP/1.1 - 200 OK");
+                        salida.println("HTTP/1.1 200 OK");
                         salida.println("Accept: " + mapaEncabezados.get("Accept:"));
                         salida.println("Content-type: text/html");
                         salida.println("Content-length: " + mapaEncabezados.get("Content-length:"));
@@ -269,7 +271,7 @@ public class ServidorHTTP implements  Runnable {
                 datosSalida.close(); // Se cierra buffer de datos.
                 conectar.close(); // Se cierra la conexion del socket.
             } catch(Exception e) {
-                System.err.println("Error cerrandp el flujo: " + e.getMessage());
+                System.err.println("Error cerrando el flujo: " + e.getMessage());
             }
 
             System.out.println("Conexion cerrada. \n");
@@ -314,12 +316,12 @@ public class ServidorHTTP implements  Runnable {
         byte[] datosArch = leerDatosArchivo(archivoNE, longiArchivo); // Lee el contenido para retornarselo al cliente.
 
         // Se mandan Encabezados o Headers HTTP con datos al cliente.
-        salida.println("HTTP/1.1 - 404 Archivo no encontrado.");
-        salida.println("Servidor (Server): Servidor HTTP - TP1");
-        salida.println("Fecha (Date): " + new Date());
-        salida.println("Tipo de contenido (Content-type): " + tMIMEConenido);
-        salida.println("Longitud de contenido (Content-length): " + longiArchivo);
-        salida.println("Acepta (Accept): text/html, text/plain"); // Tipos de media que acepta el servidor. Faltan imagenes.
+        salida.println("HTTP/1.1 404 File Not Found");
+        salida.println("Server: Servidor HTTP - TP1");
+        salida.println("Date: " + new Date());
+        salida.println("Content-type: " + tMIMEConenido);
+        salida.println("Content-length: " + longiArchivo);
+        salida.println("Accept: text/html, text/plain"); // Tipos de media que acepta el servidor. Faltan imagenes.
         salida.println(); // Linea en blanco entre encabezados y contenido. Esto es importante!
         salida.flush(); // Se limpia el flujo de caracteres de salida.
 
